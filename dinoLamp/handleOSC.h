@@ -37,18 +37,6 @@ int getBrightness(int value) {
 }
 
 
-// deal with incoming OSC messages:
-void routeInt(OSCMessage &msg, int addrOffset ) {
-  //  Serial.print(addrOffset);
-  Serial.print("  /int ");
-  Serial.println(msg.getInt(0));
-}
-
-void routeFloat(OSCMessage &msg, int addrOffset ) {
-  Serial.print("got /float ");
-  Serial.println(msg.getFloat(0));
-}
-
 void routeBrightness(OSCMessage &msg, int addrOffset) {
   //  Serial.print("got /brightness");
 
@@ -60,17 +48,10 @@ void routeBrightness(OSCMessage &msg, int addrOffset) {
 }
 
 void rgb(OSCMessage &msg, int addrOFFSET) {
-  lantern->color[0] = msg.getInt(0);
+  lantern->color[0] = msg.getInt(0); // come in between 0:100
   lantern->color[1] = msg.getInt(1);
   lantern->color[2] = msg.getInt(2);
 
   newData = true;
   gotColor = true;
-
-  //  Serial.print("got /rgb r: ");
-  //  Serial.print(red);
-  //  Serial.print(" g: ");
-  //  Serial.print(green);
-  //  Serial.print(" b: ");
-  //  Serial.println(blue);
 }
