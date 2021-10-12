@@ -31,7 +31,7 @@ int refreshRate = 30;
 void setup() {
   lantern = new LEDStrip(30);
   lantern->init();
-  
+
   //setup ethernet part
   Serial.begin(115200);
   pixels.begin();
@@ -122,8 +122,7 @@ void loop() {
       bundleIN.fill(Udp.read());
 
     if (!bundleIN.hasError()) {
-      bundleIN.route("/int", routeInt);
-      bundleIN.route("/float", routeFloat);
+
       bundleIN.route("/brightness", routeBrightness);
       bundleIN.route("/rgb", rgb);
       // set individual pixel, rgb
@@ -134,12 +133,34 @@ void loop() {
     }
   }
 
-  if (refreshTimer < millis() && newData && gotColor) {
+
+  lantern->animate();
+
+  if (refreshTimer < millis() && ((newData && gotColor) || lantern->animating)) {
     refreshTimer = millis() + refreshRate;
-    
-    for (int i = 0; i < lantern->nPixels; i++) {
-      pixels.setPixelColor(i, pixels.Color(lantern->getColor(0), lantern->getColor(1), lantern->getColor(2)));
+    newData = false;
+
+    if (lantern->animating) {
+      if (lantern->raise) {
+        for (int i = 0; i < 15; i++) {
+          int pointerIndex = (lantern->pushPointer + i) % lantern->nPixels;
+          pixels.setPixelColor(i, pixels.Color(lantern->pixelArray[pointerIndex][0], lantern->pixelArray[pointerIndex][1], lantern->pixelArray[pointerIndex][2]));
+          pixels.setPixelColor(29 - i, pixels.Color(lantern->pixelArray[pointerIndex][0], lantern->pixelArray[pointerIndex][1], lantern->pixelArray[pointerIndex][2]));
+        }
+      } else {
+        for (int i = 0; i < 30; i++) {
+          int pointerIndex = (lantern->pushPointer + i) % lantern->nPixels;
+          pixels.setPixelColor(i, pixels.Color(lantern->pixelArray[pointerIndex][0], lantern->pixelArray[pointerIndex][1], lantern->pixelArray[pointerIndex][2]));
+        }
+
+
+      }
+    } else {
+      for (int i = 0; i < lantern->nPixels; i++) {
+        pixels.setPixelColor(i, pixels.Color(lantern->getColor(0), lantern->getColor(1), lantern->getColor(2)));
+      }
     }
+
     pixels.show();
   }
 }
