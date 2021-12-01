@@ -72,7 +72,7 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-    if (i > 10) {
+    if (i > 100) {
       state = false;
       break;
     }
@@ -125,6 +125,10 @@ void loop() {
 
       bundleIN.route("/brightness", routeBrightness);
       bundleIN.route("/rgb", rgb);
+      bundleIN.route("/rgbRange", rgbRange);
+      bundleIN.route("/animate", animate);
+      bundleIN.route("/interval", pushInterval);
+      bundleIN.route("/burst", burst);
       // set individual pixel, rgb
       // set animation modes
       // set delay time / rate
@@ -134,14 +138,20 @@ void loop() {
   }
 
 
+  // update animation state
   lantern->animate();
 
-  if (refreshTimer < millis() && ((newData && gotColor) || lantern->animating)) {
+  
+  // Won't run unless it has received an update or it is animating
+  if (refreshTimer < millis() && ((lantern->newData && gotColor) || (lantern->animateMode > 0))) {
+    // push state to LEDs (30ms ~= 30 fps)
     refreshTimer = millis() + refreshRate;
-    newData = false;
-
-    if (lantern->animating) {
-      if (lantern->raise) {
+    // Clear newata flag
+    lantern->newData = false;
+    
+    
+    if (lantern->animateMode > 0) {
+      if (lantern->animateMode == 1) {
         for (int i = 0; i < 15; i++) {
           int pointerIndex = (lantern->pushPointer + i) % lantern->nPixels;
           pixels.setPixelColor(i, pixels.Color(lantern->pixelArray[pointerIndex][0], lantern->pixelArray[pointerIndex][1], lantern->pixelArray[pointerIndex][2]));
@@ -152,10 +162,10 @@ void loop() {
           int pointerIndex = (lantern->pushPointer + i) % lantern->nPixels;
           pixels.setPixelColor(i, pixels.Color(lantern->pixelArray[pointerIndex][0], lantern->pixelArray[pointerIndex][1], lantern->pixelArray[pointerIndex][2]));
         }
-
-
       }
-    } else {
+    }
+    // static mode: 
+    else {
       for (int i = 0; i < lantern->nPixels; i++) {
         pixels.setPixelColor(i, pixels.Color(lantern->getColor(0), lantern->getColor(1), lantern->getColor(2)));
       }

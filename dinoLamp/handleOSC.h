@@ -8,7 +8,7 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ80
 
 LEDStrip* lantern;
 
-bool newData = false;
+
 bool gotColor = false;
 
 // brightness lookup table
@@ -39,12 +39,40 @@ int getBrightness(int value) {
 
 void routeBrightness(OSCMessage &msg, int addrOffset) {
   //  Serial.print("got /brightness");
-
   float value = msg.getInt(0);
   lantern->brightness = getBrightness(value);
   //  Serial.println(value);
-  newData = true;
+  lantern->newData = true;
+}
 
+
+void animate(OSCMessage &msg, int addrOffset) {
+  //  Serial.print("got /animate");
+  lantern->animateMode  = msg.getInt(0);
+}
+
+void pushInterval(OSCMessage &msg, int addrOffset) {
+  //  Serial.print("got /animate");
+  lantern->pushInterval  = msg.getInt(0);
+}
+
+// turn on random pixels within a range. else start to subtract
+void burst(OSCMessage &msg, int addrOFFSET) {
+  lantern->burstAmount = msg.getInt(0); 
+  if(lantern->burstAmount > lantern->nPixels){
+    lantern->burstAmount = lantern->nPixels;
+  }else if(lantern->burstAmount < 1){
+    lantern->burstAmount = 1;
+  }
+  lantern->newBurst = true;
+}
+
+void rgbRange(OSCMessage &msg, int addrOFFSET) {
+  
+  lantern->colorRange[0] = msg.getInt(0); // come in between 0:100
+  lantern->colorRange[1] = msg.getInt(1);
+  lantern->colorRange[2] = msg.getInt(2);
+  
 }
 
 void rgb(OSCMessage &msg, int addrOFFSET) {
@@ -52,6 +80,6 @@ void rgb(OSCMessage &msg, int addrOFFSET) {
   lantern->color[1] = msg.getInt(1);
   lantern->color[2] = msg.getInt(2);
 
-  newData = true;
+  lantern->newData = true;
   gotColor = true;
 }
